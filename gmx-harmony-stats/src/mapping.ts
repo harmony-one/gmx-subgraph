@@ -70,7 +70,7 @@ const LIQUIDATOR_ADDRESS = "0x44311c91008dde73de521cd25136fd37d616802c"
 
 export function handleIncreasePosition(event: IncreasePositionEvent): void {
   _storeVolume("margin", event.block.timestamp, event.params.sizeDelta)
-  // _storeVolumeBySource("margin", event.block.timestamp, event.transaction.to, event.params.sizeDelta)
+  _storeVolumeBySource("margin", event.block.timestamp, event.transaction.to, event.params.sizeDelta)
   _storeVolumeByToken("margin", event.block.timestamp, event.params.collateralToken, event.params.indexToken, event.params.sizeDelta)
   _storeFees("margin", event.block.timestamp, event.params.fee)
   _storeUserAction(event.block.timestamp, event.params.account, "margin")
@@ -78,7 +78,7 @@ export function handleIncreasePosition(event: IncreasePositionEvent): void {
 
 export function handleDecreasePosition(event: DecreasePositionEvent): void {
   _storeVolume("margin", event.block.timestamp, event.params.sizeDelta)
-  // _storeVolumeBySource("margin", event.block.timestamp, event.transaction.to, event.params.sizeDelta)
+  _storeVolumeBySource("margin", event.block.timestamp, event.transaction.to, event.params.sizeDelta)
   _storeVolumeByToken("margin", event.block.timestamp, event.params.collateralToken, event.params.indexToken, event.params.sizeDelta)
   _storeFees("margin", event.block.timestamp, event.params.fee)
   _storeUserAction(event.block.timestamp, event.params.account, "margin")
@@ -176,7 +176,7 @@ export function handleUpdatePosition(event: UpdatePositionEvent): void {
 export function handleBuyUSDG(event: BuyUSDGEvent): void {
   let volume = event.params.usdgAmount * BigInt.fromString("1000000000000")
   _storeVolume("mint", event.block.timestamp, volume)
-  // _storeVolumeBySource("mint", event.block.timestamp, event.transaction.to, volume)
+  _storeVolumeBySource("mint", event.block.timestamp, event.transaction.to, volume)
 
   let fee = volume * event.params.feeBasisPoints / BASIS_POINTS_DIVISOR
   _storeFees("mint", event.block.timestamp, fee)
@@ -187,7 +187,7 @@ export function handleBuyUSDG(event: BuyUSDGEvent): void {
 
 export function handleSellUSDG(event: SellUSDGEvent): void {
   let volume = event.params.usdgAmount * BigInt.fromString("1000000000000")
-  // _storeVolumeBySource("burn", event.block.timestamp, event.transaction.to, volume)
+  _storeVolumeBySource("burn", event.block.timestamp, event.transaction.to, volume)
   _storeVolume("burn", event.block.timestamp, volume)
 
   let fee = volume * event.params.feeBasisPoints / BASIS_POINTS_DIVISOR
@@ -240,7 +240,7 @@ export function handleSwap(event: SwapEvent): void {
   _storeVolume("swap", event.block.timestamp, volume)
   
   // TODO
-  // _storeVolumeBySource("swap", event.block.timestamp, event.transaction.to, volume)
+  _storeVolumeBySource("swap", event.block.timestamp, event.transaction.to, volume)
   
   _storeVolumeByToken("swap", event.block.timestamp, event.params.tokenIn, event.params.tokenOut, volume)
 
@@ -572,25 +572,27 @@ function _getOrCreateVolumeStat(id: string, period: string): VolumeStat {
 }
 
 function _storeVolumeBySource(type: string, timestamp: BigInt, source: Address | null, volume: BigInt): void {
-  let id = _getHourId(timestamp) + ":" + source.toHexString()
-  let entity = HourlyVolumeBySource.load(id)
+  if(source !== null) {
+    let id = _getHourId(timestamp) + ":" + source.toHexString()
+    let entity = HourlyVolumeBySource.load(id)
 
-  if (entity == null) {
-    entity = new HourlyVolumeBySource(id)
-    if (source == null) {
-      entity.source = ""
-    } else {
-      entity.source = source.toHexString()
+    if (entity == null) {
+      entity = new HourlyVolumeBySource(id)
+      if (source !== null) {
+        entity.source = source.toHexString()
+      } else {
+        entity.source = ""
+      }
+      entity.timestamp = timestamp.toI32() / 3600 * 3600
+      for (let i = 0; i < TRADE_TYPES.length; i++) {
+        let _type = TRADE_TYPES[i]
+        entity.setBigInt(_type, ZERO)
+      }
     }
-    entity.timestamp = timestamp.toI32() / 3600 * 3600
-    for (let i = 0; i < TRADE_TYPES.length; i++) {
-      let _type = TRADE_TYPES[i]
-      entity.setBigInt(_type, ZERO)
-    }
+
+    entity.setBigInt(type, entity.getBigInt(type) + volume)
+    entity.save()
   }
-
-  entity.setBigInt(type, entity.getBigInt(type) + volume)
-  entity.save()
 }
 
 function _storeVolumeByToken(type: string, timestamp: BigInt, tokenA: Address, tokenB: Address, volume: BigInt): void {
