@@ -1,0 +1,24 @@
+specVersion: 0.0.4
+schema:
+  file: ./schema.graphql
+dataSources:
+  - kind: ethereum/contract
+    name: FastPriceEvents
+    network: harmony
+    source:
+      address: "0xEd1a6A1557fef646f5beB2206cD10412a69C1345"
+      abi: FastPriceEvents
+      startBlock: 60535811  # FastPriceEvents was deployed
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.6
+      language: wasm/assemblyscript
+      entities:
+        - PriceUpdate
+      abis:
+        - name: FastPriceEvents
+          file: ./abis/FastPriceEvents.json
+      eventHandlers:
+        - event: PriceUpdate(address,uint256,address)
+          handler: handlePriceUpdate
+      file: ./src/mapping.ts
