@@ -1,0 +1,16 @@
+{
+  "name": "gmx-raw",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy-test": "graph deploy --product hosted-service gdev8317/gmx-raw --deploy-key $(cat .access_token)",
+    "deploy-satsuma": "graph deploy gmx-arbitrum-raw --version-label $(git rev-parse --abbrev-ref HEAD)-$(date '+%y%m%d%H%M%S')-$(git rev-parse --short HEAD) --node https://app.satsuma.xyz/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key $(cat .satsuma_token)",
+    "deploy-harmony": "graph deploy --studio gmx-h-raw"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.73.0",
+    "@graphprotocol/graph-ts": "^0.35.1",
+    "source-map-support": "^0.5.21"
+  }
+}

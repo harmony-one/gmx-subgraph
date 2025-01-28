@@ -1,0 +1,18 @@
+{
+  "name": "gmx",
+  "license": "UNLICENSED",
+  "scripts": {
+    "codegen": "graph codegen",
+    "build": "graph build",
+    "deploy-prod": "graph deploy --product hosted-service gmx-io/gmx-stats",
+    "deploy-test": "graph deploy --product hosted-service gdev8317/gmx-arbitrum-stats --deploy-key $(cat .access_token)",
+    "deploy-satsuma": "graph deploy gmx-arbitrum-stats --version-label $(git rev-parse --abbrev-ref HEAD)-$(date '+%y%m%d%H%M%S')-$(git rev-parse --short HEAD) --node https://app.satsuma.xyz/api/subgraphs/deploy --ipfs https://ipfs.satsuma.xyz --deploy-key $(cat .satsuma_token)"
+  },
+  "dependencies": {
+    "@graphprotocol/graph-cli": "^0.74.1",
+    "@graphprotocol/graph-ts": "^0.35.1",
+    "ethers": "^6.13.0",
+    "moment": "^2.30.1",
+    "source-map-support": "^0.5.21"
+  }
+}
